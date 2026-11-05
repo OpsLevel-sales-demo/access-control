@@ -615,6 +615,7 @@ func TestNewDB(t *testing.T) {
 		}
 		_, err := New(uri, &cfg)
 		require.Error(t, err)
+		require.ErrorIs(t, err, storage.ErrDatabaseConnectionFailed)
 	})
 }
 

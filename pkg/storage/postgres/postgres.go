@@ -257,7 +257,7 @@ func configureDB(db *pgxpool.Pool, cfg *sqlcommon.Config, dbName string) (promet
 		return nil
 	}, policy)
 	if err != nil {
-		return nil, fmt.Errorf("ping db: %w", err)
+		return nil, fmt.Errorf("%w (%s): %w", storage.ErrDatabaseConnectionFailed, dbName, err)
 	}
 
 	var collector prometheus.Collector

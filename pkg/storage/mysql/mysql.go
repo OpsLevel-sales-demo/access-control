@@ -99,7 +99,7 @@ func configureDB(db *sql.DB, cfg *sqlcommon.Config, dbName string) (prometheus.C
 		return nil
 	}, policy)
 	if err != nil {
-		return nil, fmt.Errorf("ping db: %w", err)
+		return nil, fmt.Errorf("%w (%s): %w", storage.ErrDatabaseConnectionFailed, dbName, err)
 	}
 
 	var collector prometheus.Collector

@@ -1442,6 +1442,21 @@ func TestIsReady_SecondaryError(t *testing.T) {
 	require.Contains(t, status.Message, "secondary:")
 }
 
+// TestNew_PingFailureWrapsErrDatabaseConnectionFailed verifies that when the
+// primary database cannot be reached, New returns an error that wraps
+// storage.ErrDatabaseConnectionFailed so callers can identify connection failures
+// via errors.Is.
+func TestNew_PingFailureWrapsErrDatabaseConnectionFailed(t *testing.T) {
+	uri := "root:password@tcp(localhost:19999)/nonexistent"
+	cfg := sqlcommon.NewConfig()
+	cfg.PingTimeout = 50 * time.Millisecond
+	cfg.PingRetryMaxElapsedTime = 200 * time.Millisecond
+
+	_, err := New(uri, cfg)
+	require.Error(t, err)
+	require.ErrorIs(t, err, storage.ErrDatabaseConnectionFailed)
+}
+
 // TestClose_WithSecondaryAndCollector verifies that Close correctly unregisters
 // the secondaryDBStatsCollector and closes secondaryDB without panicking.
 func TestClose_WithSecondaryAndCollector(t *testing.T) {
