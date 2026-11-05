@@ -10,6 +10,10 @@ import (
 )
 
 var (
+	// ErrDatabaseConnectionFailed is returned when a connection to the database cannot
+	// be established (e.g. during startup ping retries or health checks).
+	ErrDatabaseConnectionFailed = errors.New("Database connection failed")
+
 	// ErrCollision is returned when an item already exists within the store.
 	ErrCollision = errors.New("item already exists")
 
