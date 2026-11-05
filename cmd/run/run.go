@@ -129,7 +129,7 @@ func NewRunCommand() *cobra.Command {
 		Use:   "run",
 		Short: "Run the OpenFGA server",
 		Long:  "Run the OpenFGA server.",
-		Run:   run,
+		RunE:  run,
 		Args:  cobra.NoArgs,
 	}
 
@@ -213,11 +213,11 @@ func NewRunCommand() *cobra.Command {
 
 	flags.String("datastore-username", "", "the connection username to use to connect to the datastore (overwrites any username provided in the connection uri)")
 
-	flags.String("datastore-password", "", "the connection password to use to connect to the datastore (overwrites any password provided in the connection uri)")
+	flags.String("datastore-[REDACTED]", "", "the connection [REDACTED] to use to connect to the datastore (overwrites any [REDACTED] provided in the connection uri)")
 
 	flags.String("datastore-secondary-username", "", "the connection username to use to connect to the secondary datastore (overwrites any username provided in the connection uri)")
 
-	flags.String("datastore-secondary-password", "", "the connection password to use to connect to the secondary datastore (overwrites any password provided in the connection uri)")
+	flags.String("datastore-secondary-[REDACTED]", "", "the connection [REDACTED] to use to connect to the secondary datastore (overwrites any [REDACTED] provided in the connection uri)")
 
 	flags.Int("datastore-max-cache-size", defaultConfig.Datastore.MaxCacheSize, "the maximum number of authorization models that will be cached in memory")
 
@@ -417,21 +417,22 @@ func ReadConfig() (*serverconfig.Config, error) {
 	return config, nil
 }
 
-func run(_ *cobra.Command, _ []string) {
+func run(_ *cobra.Command, _ []string) error {
 	config, err := ReadConfig()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if err := config.Verify(); err != nil {
-		panic(err)
+		return err
 	}
 
 	logger := logger.MustNewLogger(config.Log.Format, config.Log.Level, config.Log.TimestampFormat)
 	serverCtx := &ServerContext{Logger: logger}
 	if err := serverCtx.Run(context.Background(), config); err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 type ServerContext struct {

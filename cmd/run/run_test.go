@@ -1532,14 +1532,14 @@ func TestRunCommandNoConfigDefaultValues(t *testing.T) {
 func TestRunCommandConfigFileValuesAreParsed(t *testing.T) {
 	config := `datastore:
     engine: postgres
-    uri: postgres://postgres:password@127.0.0.1:5432/postgres
+    uri: postgres://postgres:[REDACTED]@127.0.0.1:5432/postgres
 `
 	util.PrepareTempConfigFile(t, config)
 
 	runCmd := NewRunCommand()
 	runCmd.RunE = func(cmd *cobra.Command, _ []string) error {
 		require.Equal(t, "postgres", viper.GetString(datastoreEngineFlag))
-		require.Equal(t, "postgres://postgres:password@127.0.0.1:5432/postgres", viper.GetString(datastoreURIFlag))
+		require.Equal(t, "postgres://postgres:[REDACTED]@127.0.0.1:5432/postgres", viper.GetString(datastoreURIFlag))
 		return nil
 	}
 
@@ -1822,7 +1822,7 @@ func TestServerContext_datastoreConfig(t *testing.T) {
 				Datastore: serverconfig.DatastoreConfig{
 					Engine:   "mysql",
 					Username: "root",
-					Password: "password",
+					Password: "[REDACTED]",
 					URI:      "uri?is;bad=true",
 				},
 			},
@@ -1836,13 +1836,41 @@ func TestServerContext_datastoreConfig(t *testing.T) {
 				Datastore: serverconfig.DatastoreConfig{
 					Engine:   "postgres",
 					Username: "root",
-					Password: "password",
+					Password: "[REDACTED]",
 					URI:      "~!@#$%^&*()_+}{:<>?",
 				},
 			},
 			wantDSType:     nil,
 			wantSerializer: nil,
 			wantErr:        errors.New("parse postgres connection uri"),
+		},
+		{
+			name: "postgres_unreachable_db",
+			config: &serverconfig.Config{
+				Datastore: serverconfig.DatastoreConfig{
+					Engine:                  "postgres",
+					URI:                     "[REDACTED],
+					PingTimeout:             100 * time.Millisecond,
+					PingRetryMaxElapsedTime: 200 * time.Millisecond,
+				},
+			},
+			wantDSType:     nil,
+			wantSerializer: nil,
+			wantErr:        errors.New("ping db"),
+		},
+		{
+			name: "mysql_unreachable_db",
+			config: &serverconfig.Config{
+				Datastore: serverconfig.DatastoreConfig{
+					Engine:                  "mysql",
+					URI:                     "user:[REDACTED]@tcp(localhost:19998)/testdb",
+					PingTimeout:             100 * time.Millisecond,
+					PingRetryMaxElapsedTime: 200 * time.Millisecond,
+				},
+			},
+			wantDSType:     nil,
+			wantSerializer: nil,
+			wantErr:        errors.New("ping db"),
 		},
 		{
 			name: "unsupported_engine",
