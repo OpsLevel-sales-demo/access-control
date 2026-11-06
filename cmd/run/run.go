@@ -420,17 +420,19 @@ func ReadConfig() (*serverconfig.Config, error) {
 func run(_ *cobra.Command, _ []string) {
 	config, err := ReadConfig()
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
+		os.Exit(1)
 	}
 
 	if err := config.Verify(); err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "invalid config: %v\n", err)
+		os.Exit(1)
 	}
 
-	logger := logger.MustNewLogger(config.Log.Format, config.Log.Level, config.Log.TimestampFormat)
-	serverCtx := &ServerContext{Logger: logger}
+	l := logger.MustNewLogger(config.Log.Format, config.Log.Level, config.Log.TimestampFormat)
+	serverCtx := &ServerContext{Logger: l}
 	if err := serverCtx.Run(context.Background(), config); err != nil {
-		panic(err)
+		l.Fatal("failed to start server", zap.Error(err))
 	}
 }
 
@@ -530,17 +532,17 @@ func (s *ServerContext) datastoreConfig(config *serverconfig.Config) (storage.Op
 	case "mysql":
 		datastore, err = mysql.New(config.Datastore.URI, dsCfg)
 		if err != nil {
-			return nil, nil, fmt.Errorf("initialize mysql datastore: %w", err)
+			return nil, nil, fmt.Errorf("failed to connect to mysql datastore: %w", err)
 		}
 	case "postgres":
 		datastore, err = postgres.New(config.Datastore.URI, dsCfg)
 		if err != nil {
-			return nil, nil, fmt.Errorf("initialize postgres datastore: %w", err)
+			return nil, nil, fmt.Errorf("failed to connect to postgres datastore: %w", err)
 		}
 	case "sqlite":
 		datastore, err = sqlite.New(config.Datastore.URI, dsCfg)
 		if err != nil {
-			return nil, nil, fmt.Errorf("initialize sqlite datastore: %w", err)
+			return nil, nil, fmt.Errorf("failed to connect to sqlite datastore: %w", err)
 		}
 	default:
 		return nil, nil, fmt.Errorf("storage engine '%s' is unsupported", config.Datastore.Engine)
