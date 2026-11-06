@@ -1845,6 +1845,34 @@ func TestServerContext_datastoreConfig(t *testing.T) {
 			wantErr:        errors.New("parse postgres connection uri"),
 		},
 		{
+			name: "postgres_unreachable_host",
+			config: &serverconfig.Config{
+				Datastore: serverconfig.DatastoreConfig{
+					Engine:                  "postgres",
+					URI:                     "[REDACTED],
+					PingTimeout:             100 * time.Millisecond,
+					PingRetryMaxElapsedTime: 200 * time.Millisecond,
+				},
+			},
+			wantDSType:     nil,
+			wantSerializer: nil,
+			wantErr:        errors.New("failed to connect to postgres datastore"),
+		},
+		{
+			name: "mysql_unreachable_host",
+			config: &serverconfig.Config{
+				Datastore: serverconfig.DatastoreConfig{
+					Engine:                  "mysql",
+					URI:                     "user:pass@tcp(127.0.0.1:1)/db",
+					PingTimeout:             100 * time.Millisecond,
+					PingRetryMaxElapsedTime: 200 * time.Millisecond,
+				},
+			},
+			wantDSType:     nil,
+			wantSerializer: nil,
+			wantErr:        errors.New("failed to connect to mysql datastore"),
+		},
+		{
 			name: "unsupported_engine",
 			config: &serverconfig.Config{
 				Datastore: serverconfig.DatastoreConfig{
